@@ -1,0 +1,54 @@
+import os
+import google.generativeai as genai
+import streamlit as st
+
+# Configure your API key for Google Generative AI
+genai.configure(api_key='ENTER API KEY')
+
+# Generation config for the AI model
+generation_config = {
+    "temperature": 1,
+    "top_p": 0.95,
+    "top_k": 40,
+    "max_output_tokens": 8192,
+    "response_mime_type": "text/plain",
+    
+}
+
+# Initialize the generative model
+model = genai.GenerativeModel(
+    model_name="gemini-2.0-flash-exp",
+    generation_config=generation_config,
+)
+
+# Streamlit interface
+st.title("AI Email Generator")
+
+# Input fields
+topic = st.text_input("Topic", "Project Update")
+person = st.text_input("Recipient (To)", "John Doe")
+word_count = st.number_input("Word Count", min_value=50, max_value=2000, step=50, value=200)
+
+# Generate email button
+if st.button("Generate Email"):
+    if topic and person and word_count:
+        try:
+            # Create a chat session
+            chat_session = model.start_chat(
+                history=[]
+            )
+
+            # Construct the prompt for the AI model
+            prompt = f"Generate an email about '{topic}' to {person}, using approximately {word_count} words."
+
+            # Generate the email using the AI model
+            response = chat_session.send_message(prompt)
+
+            # Show the generated email
+            st.subheader("Generated Email:")
+            st.text_area("Email Content", response.text.strip(), height=300)
+
+        except Exception as e:
+            st.error(f"Error generating email: {str(e)}")
+    else:
+        st.warning("Please fill in all the fields.")
